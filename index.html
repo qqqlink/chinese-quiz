@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字詞填空練習</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "微軟正黑體", "Microsoft JhengHei", sans-serif; background: #f5f5f0; min-height: 100vh; display: flex; justify-content: center; padding: 1.5rem 1rem; }
+  .container { width: 100%; max-width: 680px; }
+
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
+  .title { font-size: 20px; font-weight: 500; color: #1a1a1a; }
+  .score-row { display: flex; gap: 10px; }
+  .stat { background: #ebe9e2; border-radius: 8px; padding: 7px 16px; text-align: center; }
+  .stat-label { font-size: 11px; color: #888; }
+  .stat-val { font-size: 20px; font-weight: 500; color: #1a1a1a; }
+
+  .progress { height: 5px; background: #ddd; border-radius: 3px; margin-bottom: 1.4rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: #378ADD; border-radius: 3px; transition: width 0.3s; }
+
+  .card { background: #fff; border: 1px solid #e0ddd6; border-radius: 14px; padding: 1.5rem; }
+  .tag { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.2rem; background: #E6F1FB; color: #0C447C; }
+
+  .sentence { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0; margin-bottom: 1.5rem; min-height: 56px; }
+  .char-unit { display: inline-flex; flex-direction: row; align-items: flex-end; margin-right: 1px; }
+  .char-text { font-size: 28px; font-weight: 500; color: #1a1a1a; line-height: 1; }
+  .char-zy { writing-mode: vertical-rl; font-size: 12px; color: #888; line-height: 1.1; margin-left: 1px; letter-spacing: 0.05em; padding-bottom: 1px; align-self: flex-end; }
+  .punct { font-size: 28px; font-weight: 500; color: #1a1a1a; line-height: 1; margin-right: 2px; align-self: flex-end; }
+  .blank-unit { display: inline-flex; align-items: flex-end; margin: 0 4px; }
+  .blank-char { min-width: 36px; height: 34px; border-bottom: 2.5px solid #378ADD; text-align: center; font-size: 28px; font-weight: 500; color: #185FA5; line-height: 34px; padding: 0 4px; }
+
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1.2rem; }
+  .choice { border: 1px solid #ccc; border-radius: 10px; padding: 12px 32px; font-size: 22px; font-weight: 500; cursor: pointer; background: #fff; color: #1a1a1a; transition: background 0.12s; -webkit-tap-highlight-color: transparent; }
+  .choice:hover:not(:disabled) { background: #f5f5f0; }
+  .choice:active:not(:disabled) { background: #eee; }
+  .choice.correct { background: #EAF3DE; border-color: #3B6D11; color: #27500A; }
+  .choice.wrong { background: #FCEBEB; border-color: #A32D2D; color: #791F1F; }
+  .choice:disabled { cursor: default; }
+
+  .feedback { font-size: 15px; border-radius: 8px; padding: 12px 14px; margin-bottom: 1rem; line-height: 1.7; }
+  .feedback.correct { background: #EAF3DE; color: #27500A; }
+  .feedback.wrong { background: #FCEBEB; color: #791F1F; }
+  .feedback.hidden { visibility: hidden; min-height: 48px; }
+
+  .next-btn { border: 1px solid #ccc; border-radius: 10px; padding: 12px 28px; font-size: 16px; cursor: pointer; background: #fff; color: #1a1a1a; -webkit-tap-highlight-color: transparent; }
+  .next-btn:active { background: #eee; }
+
+  .loading { display: flex; align-items: center; gap: 10px; color: #888; font-size: 15px; padding: 1.5rem 0; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #aaa; animation: blink 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+
+  .end-screen { text-align: center; padding: 2rem 1rem; }
+  .end-score { font-size: 56px; font-weight: 500; color: #185FA5; margin: 1rem 0; }
+  .end-msg { font-size: 17px; color: #666; margin-bottom: 1.5rem; line-height: 1.7; }
+  .restart-btn { border: 1px solid #ccc; border-radius: 10px; padding: 14px 36px; font-size: 17px; cursor: pointer; background: #fff; color: #1a1a1a; }
+  .restart-btn:active { background: #eee; }
+
+  .no-key { color: #888; font-size: 15px; padding: 1rem 0; line-height: 1.9; }
+  .no-key code { background: #eee; border-radius: 4px; padding: 2px 6px; font-size: 13px; }
+  .err-msg { color: #A32D2D; font-size: 14px; padding: 0.5rem 0; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="title">字詞填空練習</div>
+    <div class="score-row">
+      <div class="stat"><div class="stat-label">答對</div><div class="stat-val" id="cc">0</div></div>
+      <div class="stat"><div class="stat-label">題數</div><div class="stat-val" id="tc">0</div></div>
+    </div>
+  </div>
+  <div class="progress"><div class="progress-fill" id="pf" style="width:0%"></div></div>
+  <div id="qcard" class="card"></div>
+</div>
+
+<script>
+const PROMPT = `你是國小國語填空題出題老師。請出 10 道填空題，練習「的／得／地」和「在／再」的用法，兩種類型各 5 題。
+
+請直接回傳一個 JSON 陣列，不要加任何說明文字：
+[
+  {
+    "tag": "的／得",
+    "before": [{"t":"她","r":"ㄊㄚ"},{"t":"跑","r":"ㄆㄠˇ"}],
+    "after": [{"t":"很","r":"ㄏㄣˇ"},{"t":"快","r":"ㄎㄨㄞˋ"},{"t":"。","p":true}],
+    "choices": ["的","得","地"],
+    "answer": "得",
+    "explain": "跑得很快——「得」接動詞後說明程度"
+  }
+]
+
+規則：
+- before 是空格前的字，after 是空格後的字
+- 每個字有 t（字）和 r（注音）；標點符號加 "p":true，不需要 r
+- tag 只能是「的／得」或「在／再」
+- 「的／得」題給 choices ["的","得","地"]；「在／再」題給 ["在","再"]
+- 句子為國小程度、日常生活情境，每題句子都不同
+- explain 說明答案的文法用法，30 字以內
+- 不要重複出現相同句子
+- 兩種類型交錯排列`;
+
+let questions = [], qi = 0, correct = 0, answered = false;
+
+function getKey() {
+  return new URLSearchParams(window.location.search).get('key') || '';
+}
+
+function showLoading() {
+  document.getElementById('qcard').innerHTML = `<div class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:6px">AI 出題中，請稍候…</span></div>`;
+}
+
+async function fetchQuestions() {
+  const key = getKey();
+  if (!key) {
+    document.getElementById('qcard').innerHTML = `<div class="no-key">
+      網址中沒有找到 API Key。<br>
+      請用這個格式開啟：<br>
+      <code>https://你的帳號.github.io/chinese-quiz/?key=你的Key</code>
+    </div>`;
+    return;
+  }
+  showLoading();
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: PROMPT }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 1.1 }
+        })
+      }
+    );
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+    questions = JSON.parse(clean);
+    qi = 0; correct = 0; answered = false;
+    document.getElementById('cc').textContent = '0';
+    document.getElementById('tc').textContent = '0';
+    document.getElementById('pf').style.width = '0%';
+    renderQ();
+  } catch(e) {
+    document.getElementById('qcard').innerHTML = `
+      <div class="err-msg">出題失敗：${e.message}</div>
+      <button class="restart-btn" style="margin-top:1rem" onclick="fetchQuestions()">重試</button>`;
+  }
+}
+
+function buildSentence(q, filled) {
+  let html = '';
+  q.before.forEach(item => {
+    if (item.p) html += `<span class="punct">${item.t}</span>`;
+    else html += `<span class="char-unit"><span class="char-text">${item.t}</span><span class="char-zy">${item.r||''}</span></span>`;
+  });
+  html += `<span class="blank-unit"><span class="blank-char" id="bd">${filled || '\u00a0\u00a0'}</span></span>`;
+  q.after.forEach(item => {
+    if (item.p) html += `<span class="punct">${item.t}</span>`;
+    else html += `<span class="char-unit"><span class="char-text">${item.t}</span><span class="char-zy">${item.r||''}</span></span>`;
+  });
+  return html;
+}
+
+function renderQ() {
+  const card = document.getElementById('qcard');
+  if (qi >= questions.length) {
+    const pct = Math.round(correct / questions.length * 100);
+    const msg = pct >= 90 ? '超棒！全部都答對了！' :
+                pct >= 70 ? '很不錯！再練習幾次就完美了！' :
+                '繼續加油，多練習就會越來越好！';
+    card.innerHTML = `<div class="end-screen">
+      <div style="font-size:15px;color:#888">完成！共 ${questions.length} 題</div>
+      <div class="end-score">${correct} / ${questions.length}</div>
+      <div class="end-msg">${msg}</div>
+      <button class="restart-btn" onclick="fetchQuestions()">再來一組新題目！</button>
+    </div>`;
+    document.getElementById('pf').style.width = '100%';
+    return;
+  }
+  const q = questions[qi];
+  answered = false;
+  document.getElementById('pf').style.width = (qi / questions.length * 100) + '%';
+  document.getElementById('tc').textContent = qi;
+  card.innerHTML = `
+    <div class="tag">${q.tag}</div>
+    <div class="sentence">${buildSentence(q, null)}</div>
+    <div class="choices" id="crow"></div>
+    <div class="feedback hidden" id="fb"></div>
+    <button class="next-btn" id="nb" style="display:none" onclick="nextQ()">下一題 →</button>
+  `;
+  const row = document.getElementById('crow');
+  q.choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice'; btn.textContent = c;
+    btn.onclick = () => pick(c, q, btn);
+    row.appendChild(btn);
+  });
+}
+
+function pick(choice, q, btn) {
+  if (answered) return;
+  answered = true;
+  const ok = choice === q.answer;
+  document.querySelectorAll('.choice').forEach(b => {
+    b.disabled = true;
+    if (b.textContent === q.answer) b.classList.add('correct');
+  });
+  if (!ok) btn.classList.add('wrong');
+  if (ok) { correct++; document.getElementById('cc').textContent = correct; }
+  const fb = document.getElementById('fb');
+  fb.className = 'feedback ' + (ok ? 'correct' : 'wrong');
+  fb.textContent = (ok ? '答對了！' : '答錯了。') + q.explain;
+  const bd = document.getElementById('bd');
+  if (bd) { bd.textContent = q.answer; bd.style.color = ok ? '#185FA5' : '#3B6D11'; }
+  document.getElementById('nb').style.display = 'inline-block';
+}
+
+function nextQ() { qi++; renderQ(); }
+
+window.onload = fetchQuestions;
+</script>
+</body>
+</html>
