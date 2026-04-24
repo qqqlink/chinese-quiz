@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -8,20 +9,16 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "微軟正黑體", "Microsoft JhengHei", sans-serif; background: #f5f5f0; min-height: 100vh; display: flex; justify-content: center; padding: 1.5rem 1rem; }
   .container { width: 100%; max-width: 680px; }
-
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; }
   .title { font-size: 20px; font-weight: 500; color: #1a1a1a; }
   .score-row { display: flex; gap: 10px; }
   .stat { background: #ebe9e2; border-radius: 8px; padding: 7px 16px; text-align: center; }
   .stat-label { font-size: 11px; color: #888; }
   .stat-val { font-size: 20px; font-weight: 500; color: #1a1a1a; }
-
   .progress { height: 5px; background: #ddd; border-radius: 3px; margin-bottom: 1.4rem; overflow: hidden; }
   .progress-fill { height: 100%; background: #378ADD; border-radius: 3px; transition: width 0.3s; }
-
   .card { background: #fff; border: 1px solid #e0ddd6; border-radius: 14px; padding: 1.5rem; }
   .tag { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 20px; margin-bottom: 1.2rem; background: #E6F1FB; color: #0C447C; }
-
   .sentence { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0; margin-bottom: 1.5rem; min-height: 56px; }
   .char-unit { display: inline-flex; flex-direction: row; align-items: flex-end; margin-right: 1px; }
   .char-text { font-size: 28px; font-weight: 500; color: #1a1a1a; line-height: 1; }
@@ -29,7 +26,6 @@
   .punct { font-size: 28px; font-weight: 500; color: #1a1a1a; line-height: 1; margin-right: 2px; align-self: flex-end; }
   .blank-unit { display: inline-flex; align-items: flex-end; margin: 0 4px; }
   .blank-char { min-width: 36px; height: 34px; border-bottom: 2.5px solid #378ADD; text-align: center; font-size: 28px; font-weight: 500; color: #185FA5; line-height: 34px; padding: 0 4px; }
-
   .choices { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 1.2rem; }
   .choice { border: 1px solid #ccc; border-radius: 10px; padding: 12px 32px; font-size: 22px; font-weight: 500; cursor: pointer; background: #fff; color: #1a1a1a; transition: background 0.12s; -webkit-tap-highlight-color: transparent; }
   .choice:hover:not(:disabled) { background: #f5f5f0; }
@@ -37,30 +33,17 @@
   .choice.correct { background: #EAF3DE; border-color: #3B6D11; color: #27500A; }
   .choice.wrong { background: #FCEBEB; border-color: #A32D2D; color: #791F1F; }
   .choice:disabled { cursor: default; }
-
   .feedback { font-size: 15px; border-radius: 8px; padding: 12px 14px; margin-bottom: 1rem; line-height: 1.7; }
   .feedback.correct { background: #EAF3DE; color: #27500A; }
   .feedback.wrong { background: #FCEBEB; color: #791F1F; }
   .feedback.hidden { visibility: hidden; min-height: 48px; }
-
   .next-btn { border: 1px solid #ccc; border-radius: 10px; padding: 12px 28px; font-size: 16px; cursor: pointer; background: #fff; color: #1a1a1a; -webkit-tap-highlight-color: transparent; }
   .next-btn:active { background: #eee; }
-
-  .loading { display: flex; align-items: center; gap: 10px; color: #888; font-size: 15px; padding: 1.5rem 0; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: #aaa; animation: blink 1.2s infinite; }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
-
   .end-screen { text-align: center; padding: 2rem 1rem; }
   .end-score { font-size: 56px; font-weight: 500; color: #185FA5; margin: 1rem 0; }
   .end-msg { font-size: 17px; color: #666; margin-bottom: 1.5rem; line-height: 1.7; }
   .restart-btn { border: 1px solid #ccc; border-radius: 10px; padding: 14px 36px; font-size: 17px; cursor: pointer; background: #fff; color: #1a1a1a; }
   .restart-btn:active { background: #eee; }
-
-  .no-key { color: #888; font-size: 15px; padding: 1rem 0; line-height: 1.9; }
-  .no-key code { background: #eee; border-radius: 4px; padding: 2px 6px; font-size: 13px; }
-  .err-msg { color: #A32D2D; font-size: 14px; padding: 0.5rem 0; line-height: 1.7; }
 </style>
 </head>
 <body>
@@ -77,106 +60,469 @@
 </div>
 
 <script>
-const PROMPT = `你是國小國語填空題出題老師。請出 10 道填空題，練習「的／得／地」和「在／再」的用法，兩種類型各 5 題。
+// ─── 注音字典 ───────────────────────────────────────────────
+const ZY = {
+  "她":"ㄊㄚ","他":"ㄊㄚ","我":"ㄨㄛˇ","你":"ㄋㄧˇ","妹妹":"ㄇㄟˋㄇㄟˋ",
+  "哥哥":"ㄍㄜㄍㄜ","弟弟":"ㄉㄧˋㄉㄧˋ","姊姊":"ㄐㄧㄝˇㄐㄧㄝˇ",
+  "小明":"ㄒㄧㄠˇㄇㄧㄥˊ","小花":"ㄒㄧㄠˇㄏㄨㄚ","小華":"ㄒㄧㄠˇㄏㄨㄚˊ",
+  "媽媽":"ㄇㄚㄇㄚ","爸爸":"ㄅㄚㄅㄚ","奶奶":"ㄋㄞˇㄋㄞˇ","爺爺":"ㄧㄝˊㄧㄝˊ",
+  "老師":"ㄌㄠˇㄕ","同學":"ㄊㄨㄥˊㄒㄩㄝˊ","小狗":"ㄒㄧㄠˇㄍㄡˇ","小貓":"ㄒㄧㄠˇㄇㄠ",
+  "跑":"ㄆㄠˇ","跳":"ㄊㄧㄠˋ","唱":"ㄔㄤˋ","笑":"ㄒㄧㄠˋ","哭":"ㄎㄨ",
+  "寫":"ㄒㄧㄝˇ","畫":"ㄏㄨㄚˋ","吃":"ㄔ","喝":"ㄏㄜ","睡":"ㄕㄨㄟˋ",
+  "走":"ㄗㄡˇ","飛":"ㄈㄟ","游":"ㄧㄡˊ","爬":"ㄆㄚˊ","說":"ㄕㄨㄛ",
+  "做":"ㄗㄨㄛˋ","玩":"ㄨㄢˊ","讀":"ㄉㄨˊ","看":"ㄎㄢˋ","想":"ㄒㄧㄤˇ",
+  "很":"ㄏㄣˇ","真":"ㄓㄣ","非常":"ㄈㄟㄔㄤˊ","特別":"ㄊㄜˋㄅㄧㄝˊ",
+  "快":"ㄎㄨㄞˋ","慢":"ㄇㄢˋ","高興":"ㄍㄠㄒㄧㄥˋ","開心":"ㄎㄞㄒㄧㄣ",
+  "傷心":"ㄕㄤㄒㄧㄣ","認真":"ㄖㄣˋㄓㄣ","努力":"ㄋㄨˇㄌㄧˋ","用力":"ㄩㄥˋㄌㄧˋ",
+  "好聽":"ㄏㄠˇㄊㄧㄥ","好看":"ㄏㄠˇㄎㄢˋ","好吃":"ㄏㄠˇㄔ","好玩":"ㄏㄠˇㄨㄢˊ",
+  "大聲":"ㄉㄚˋㄕㄥ","清楚":"ㄑㄧㄥㄔㄨˇ","漂亮":"ㄆㄧㄠˋㄌㄧㄤˋ","厲害":"ㄌㄧˋㄏㄞˋ",
+  "字":"ㄗˋ","歌":"ㄍㄜ","舞":"ㄨˇ","畫":"ㄏㄨㄚˋ","故事":"ㄍㄨˋㄕ",
+  "飯":"ㄈㄢˋ","水":"ㄕㄨㄟˇ","菜":"ㄘㄞˋ","書":"ㄕㄨ","作業":"ㄗㄨㄛˋㄧㄝˋ",
+  "公園":"ㄍㄨㄥㄩㄢˊ","學校":"ㄒㄩㄝˊㄒㄧㄠˋ","教室":"ㄐㄧㄠㄕˋ","家":"ㄐㄧㄚ",
+  "這":"ㄓㄜˋ","那":"ㄋㄚˋ","我":"ㄨㄛˇ","他":"ㄊㄚ","她":"ㄊㄚ",
+  "的":"ㄉㄜ˙","書包":"ㄕㄨㄅㄠ","玩具":"ㄨㄢˊㄐㄩˋ","衣服":"ㄧㄈㄨˊ","鉛筆":"ㄑㄧㄢㄅㄧˇ",
+  "再":"ㄗㄞˋ","在":"ㄗㄞˋ","得":"ㄉㄜ˙","的":"ㄉㄜ˙",
+  "一次":"ㄧㄘˋ","一遍":"ㄧㄅㄧㄢˋ","一下":"ㄧㄒㄧㄚˋ","幾次":"ㄐㄧˇㄘˋ",
+  "後":"ㄏㄡˋ","前":"ㄑㄧㄢˊ","裡":"ㄌㄧˇ","上":"ㄕㄤˋ",
+  "也":"ㄧㄝˇ","就":"ㄐㄧㄡˋ","才":"ㄘㄞˊ","都":"ㄉㄡ",
+  "讓":"ㄖㄤˋ","把":"ㄅㄚˇ","被":"ㄅㄟˋ",
+  "正":"ㄓㄥˋ","要":"ㄧㄠˋ","想":"ㄒㄧㄤˇ","可以":"ㄎㄜˇㄧˇ",
+  "了":"ㄌㄜ˙","著":"ㄓㄜ˙","過":"ㄍㄨㄛˋ",
+  "大家":"ㄉㄚˋㄐㄧㄚ","所有人":"ㄙㄨㄛˇㄧㄡˇㄖㄣˊ",
+  "嚇":"ㄒㄧㄚˋ","嚇一跳":"ㄒㄧㄚˋㄧㄊㄧㄠˋ",
+  "跌倒":"ㄉㄧㄝㄉㄠˇ","受傷":"ㄕㄡˋㄕㄤ","感冒":"ㄍㄢˇㄇㄠˋ",
+  "起來":"ㄑㄧˇㄌㄞˊ","下去":"ㄒㄧㄚˋㄑㄩˋ",
+  "完":"ㄨㄢˊ","好":"ㄏㄠˇ","完成":"ㄨㄢˊㄔㄥˊ",
+  "功課":"ㄍㄨㄥㄎㄜˋ","考試":"ㄎㄠˇㄕˋ","比賽":"ㄅㄧˇㄙㄞˋ",
+  "打":"ㄉㄚˇ","球":"ㄑㄧㄡˊ","跑步":"ㄆㄠˇㄅㄨˋ","游泳":"ㄧㄡˊㄩㄥˇ",
+  "鋼琴":"ㄍㄤㄑㄧㄢˊ","小提琴":"ㄒㄧㄠˇㄊㄧˊㄑㄧㄣˊ",
+  "一":"ㄧ","二":"ㄦˋ","三":"ㄙㄢ","四":"ㄙˋ","五":"ㄨˇ",
+  "不":"ㄅㄨˋ","沒":"ㄇㄟˊ","沒有":"ㄇㄟˊㄧㄡˇ",
+  "這道題":"ㄓㄜˋㄉㄠˋㄊㄧˊ","這本書":"ㄓㄜˋㄅㄣˇㄕㄨ","這首歌":"ㄓㄜˋㄕㄡˇㄍㄜ",
+  "那道題":"ㄋㄚˋㄉㄠˋㄊㄧˊ","那本書":"ㄋㄚˋㄅㄣˇㄕㄨ",
+  "今天":"ㄐㄧㄣㄊㄧㄢ","明天":"ㄇㄧㄥˊㄊㄧㄢ","昨天":"ㄗㄨㄛˊㄊㄧㄢ",
+  "早上":"ㄗㄠˇㄕㄤ","晚上":"ㄨㄢˇㄕㄤˋ","下午":"ㄒㄧㄚˋㄨˇ",
+  "操場":"ㄘㄠˊㄔㄤˇ","圖書館":"ㄊㄨˊㄕㄨㄍㄨㄢˇ","餐廳":"ㄘㄢㄊㄧㄥ",
+  "床上":"ㄔㄨㄤˊㄕㄤˋ","桌上":"ㄓㄨㄛˊㄕㄤˋ","椅子上":"ㄧˇㄗˇㄕㄤˋ",
+  "到":"ㄉㄠˋ","來":"ㄌㄞˊ","去":"ㄑㄩˋ","回":"ㄏㄨㄟˊ",
+  "找":"ㄓㄠˇ","幫":"ㄅㄤ","教":"ㄐㄧㄠ","告訴":"ㄍㄠˋㄙˋ",
+  "答對":"ㄉㄚˊㄉㄨㄟˋ","答錯":"ㄉㄚˊㄘㄨㄛˋ","贏":"ㄧㄥˊ","輸":"ㄕㄨ",
+  "第一名":"ㄉㄧˋㄧㄇㄧㄥˊ","冠軍":"ㄍㄨㄢˋㄐㄩㄣ",
+  "哭":"ㄎㄨ","笑":"ㄒㄧㄠˋ","叫":"ㄐㄧㄠˋ","問":"ㄨㄣˋ","回答":"ㄏㄨㄟˊㄉㄚˊ",
+  "跳舞":"ㄊㄧㄠˋㄨˇ","唱歌":"ㄔㄤˋㄍㄜ","畫畫":"ㄏㄨㄚˋㄏㄨㄚˋ",
+  "睡覺":"ㄕㄨㄟˋㄐㄧㄠˋ","起床":"ㄑㄧˇㄔㄨㄤˊ",
+  "椅子":"ㄧˇㄗˇ","桌子":"ㄓㄨㄛˊㄗˇ","窗戶":"ㄔㄨㄤㄏㄨˋ",
+  "花":"ㄏㄨㄚ","樹":"ㄕㄨˋ","草地":"ㄘㄠˇㄉㄧˋ",
+  "美麗":"ㄇㄟˇㄌㄧˋ","可愛":"ㄎㄜˇㄞˋ","聰明":"ㄘㄨㄥㄇㄧㄥˊ","乖":"ㄍㄨㄞ",
+  "興奮":"ㄒㄧㄥˋㄈㄣˋ","緊張":"ㄐㄧㄣˇㄓㄤ","難過":"ㄋㄢˊㄍㄨㄛˋ","生氣":"ㄕㄥㄑㄧˋ",
+  "嚇得":"ㄒㄧㄚˋㄉㄜ˙","氣得":"ㄑㄧˋㄉㄜ˙","累得":"ㄌㄟˋㄉㄜ˙","忙得":"ㄇㄤˊㄉㄜ˙",
+  "忙":"ㄇㄤˊ","累":"ㄌㄟˋ","餓":"ㄜˋ","渴":"ㄎㄜˇ",
+  "先":"ㄒㄧㄢ","再":"ㄗㄞˋ","然後":"ㄖㄢˊㄏㄡˋ","最後":"ㄗㄨㄟˋㄏㄡˋ",
+  "又":"ㄧㄡˋ","還":"ㄏㄞˊ","只":"ㄓˇ","才":"ㄘㄞˊ",
+  "以後":"ㄧˇㄏㄡˋ","以前":"ㄧˇㄑㄧㄢˊ","現在":"ㄒㄧㄢˋㄗㄞˋ",
+  "等":"ㄉㄥˇ","等一下":"ㄉㄥˇㄧㄒㄧㄚˋ","稍等":"ㄕㄠˋㄉㄥˇ",
+  "請":"ㄑㄧㄥˇ","謝謝":"ㄒㄧㄝˋㄒㄧㄝˋ","對不起":"ㄉㄨㄟˋㄅㄨˋㄑㄧˇ",
+  "小心":"ㄒㄧㄠˇㄒㄧㄣ","注意":"ㄓㄨˋㄧˋ","加油":"ㄐㄧㄚㄧㄡˊ",
+};
 
-請直接回傳一個 JSON 陣列，不要加任何說明文字：
-[
+function zy(word) {
+  if (ZY[word]) return ZY[word];
+  // 逐字查
+  return [...word].map(c => ZY[c] || '').join('');
+}
+
+// ─── 模板定義 ──────────────────────────────────────────────
+// 每個模板：{ tag, build(vars)→{before,after}, vars[], answer, explain }
+
+const PEOPLE = ["她","他","小明","小花","妹妹","哥哥","弟弟","姊姊","媽媽","爸爸","老師","同學","小華","奶奶"];
+const PLACES = ["教室","公園","圖書館","操場","餐廳","家","學校"];
+
+// ── 的 模板 ──────────────────────────────────────────────
+const DE_TEMPLATES = [
+  // [主詞] 做 __ [菜/飯/事] 真好吃／真漂亮
+  ...["菜","飯","蛋糕"].map(food => ({
+    tag:"的／得", answer:"的",
+    explain:"「的」接動詞後引出名詞，做的"+food+"＝做（動詞）＋的＋"+food+"（名詞）",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"做"]], after: [[food,"真好吃","。"]]
+    }))
+  })),
+  // 這是 [主詞] __ 書包／玩具／鉛筆
+  ...["書包","玩具","鉛筆","衣服"].map(obj => ({
+    tag:"的／得", answer:"的",
+    explain:"「的」表示所有，"+obj+"前加「的」說明是誰的",
+    variants: PEOPLE.map(p => ({
+      before: [["這","是",p]], after: [[obj,"，","請","不","要","拿","走","。"]]
+    }))
+  })),
+  // 窗外美麗 __ 風景讓人心情變好
   {
-    "tag": "的／得",
-    "before": [{"t":"她","r":"ㄊㄚ"},{"t":"跑","r":"ㄆㄠˇ"}],
-    "after": [{"t":"很","r":"ㄏㄣˇ"},{"t":"快","r":"ㄎㄨㄞˋ"},{"t":"。","p":true}],
-    "choices": ["的","得","地"],
-    "answer": "得",
-    "explain": "跑得很快——「得」接動詞後說明程度"
-  }
-]
+    tag:"的／得", answer:"的",
+    explain:"「的」修飾名詞，美麗的風景＝形容詞＋的＋名詞",
+    variants: [
+      { before: [["窗外","美麗"]], after: [["風景","讓","人","心情","變","好","。"]] },
+      { before: [["路邊","美麗"]], after: [["花","讓","人","心情","變","好","。"]] },
+      { before: [["公園","可愛"]], after: [["小狗","讓","大家","都","笑","了","。"]] },
+      { before: [["天空","美麗"]], after: [["雲","讓","大家","停","下","來","看","。"]] },
+    ]
+  },
+  // [主詞] 說 __ 話讓大家笑了
+  {
+    tag:"的／得", answer:"的",
+    explain:"「的」接動詞後引出名詞，說的話＝說（動詞）＋的＋話（名詞）",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"說"]], after: [["話","讓","大家","都","笑","了","。"]]
+    }))
+  },
+  // [主詞] 畫 __ 畫真漂亮
+  {
+    tag:"的／得", answer:"的",
+    explain:"「的」接動詞後引出名詞，畫的畫＝畫（動詞）＋的＋畫（名詞）",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"畫"]], after: [["畫","真","漂亮","。"]]
+    }))
+  },
+  // [主詞] 唱 __ 歌真好聽
+  {
+    tag:"的／得", answer:"的",
+    explain:"「的」接動詞後引出名詞，唱的歌＝唱（動詞）＋的＋歌（名詞）",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"唱"]], after: [["歌","真","好聽","。"]]
+    }))
+  },
+  // [主詞] 寫 __ 字真漂亮
+  {
+    tag:"的／得", answer:"的",
+    explain:"「的」接動詞後引出名詞，寫的字＝寫（動詞）＋的＋字（名詞）",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"寫"]], after: [["字","真","漂亮","。"]]
+    }))
+  },
+];
 
-規則：
-- before 是空格前的字，after 是空格後的字
-- 每個字有 t（字）和 r（注音）；標點符號加 "p":true，不需要 r
-- tag 只能是「的／得」或「在／再」
-- 「的／得」題給 choices ["的","得","地"]；「在／再」題給 ["在","再"]
-- 句子為國小程度、日常生活情境，每題句子都不同
-- explain 說明答案的文法用法，30 字以內
-- 不要重複出現相同句子
-- 兩種類型交錯排列`;
+// ── 得 模板 ──────────────────────────────────────────────
+const DET_TEMPLATES = [
+  // [主詞] 跑 __ 很快
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」接動詞後說明程度，跑得很快＝跑（動詞）＋得＋很快",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"跑"]], after: [["很","快","。"]]
+    }))
+  },
+  // [主詞] 跳 __ 很高
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」接動詞後說明程度，跳得很高＝跳（動詞）＋得＋很高",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"跳"]], after: [["很","高","。"]]
+    }))
+  },
+  // [主詞] 高興 __ 跳起來
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明情緒的程度，高興得跳起來",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"高興"]], after: [["跳","了","起來","。"]]
+    }))
+  },
+  // [主詞] 開心 __ 笑起來
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明情緒的程度，開心得笑起來",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"開心"]], after: [["笑","了","起來","。"]]
+    }))
+  },
+  // [主詞] 傷心 __ 哭起來
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明情緒的程度，傷心得哭起來",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"傷心"]], after: [["哭","了","起來","。"]]
+    }))
+  },
+  // [主詞] 嚇 __ 跌倒
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明結果，嚇得跌倒＝嚇（動詞）＋得＋跌倒（結果）",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"嚇"]], after: [["跌倒","了","。"]]
+    }))
+  },
+  // [主詞] 累 __ 走不動
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明程度，累得走不動",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"累"]], after: [["走","不","動","。"]]
+    }))
+  },
+  // [主詞] 唱 __ 很好聽
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明程度，唱得很好聽＝唱（動詞）＋得＋很好聽",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"唱"]], after: [["很","好聽","。"]]
+    }))
+  },
+  // [主詞] 寫 __ 很認真
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明程度，寫得很認真＝寫（動詞）＋得＋很認真",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"寫"]], after: [["很","認真","。"]]
+    }))
+  },
+  // [主詞] 畫 __ 很漂亮
+  {
+    tag:"的／得", answer:"得",
+    explain:"「得」說明程度，畫得很漂亮＝畫（動詞）＋得＋很漂亮",
+    variants: PEOPLE.map(p => ({
+      before: [[p,"畫"]], after: [["很","漂亮","。"]]
+    }))
+  },
+];
 
-let questions = [], qi = 0, correct = 0, answered = false;
+// ── 在 模板 ──────────────────────────────────────────────
+const ZAI_TEMPLATES = [
+  // [主詞] __ [地點] 讀書
+  ...PLACES.map(place => ({
+    tag:"在／再", answer:"在",
+    explain:"「在」表示地點，在"+place+"＝在（介詞）＋地點",
+    variants: PEOPLE.map(p => ({
+      before: [[p]], after: [[place,"認真","讀書","。"]]
+    }))
+  })),
+  // [主詞] __ [地點] 玩
+  ...PLACES.map(place => ({
+    tag:"在／再", answer:"在",
+    explain:"「在」表示地點，在"+place+"裡玩",
+    variants: PEOPLE.map(p => ({
+      before: [[p]], after: [[place,"裡","玩","。"]]
+    }))
+  })),
+  // [主詞] 正 __ 睡覺／唱歌／畫畫
+  ...["睡覺","唱歌","畫畫","跑步","游泳"].map(act => ({
+    tag:"在／再", answer:"在",
+    explain:"「正在」表示動作正在進行，正在"+act,
+    variants: PEOPLE.map(p => ({
+      before: [[p,"正"]], after: [[act,"。"]]
+    }))
+  })),
+  // [主詞] __ 哪裡？
+  {
+    tag:"在／再", answer:"在",
+    explain:"「在」表示位置，問人在哪裡",
+    variants: PEOPLE.map(p => ({
+      before: [[p]], after: [["哪裡","？"]]
+    }))
+  },
+];
 
-function getKey() {
-  return new URLSearchParams(window.location.search).get('key') || '';
-}
+// ── 再 模板 ──────────────────────────────────────────────
+const ZAI2_TEMPLATES = [
+  // 做完功課 __ 來玩
+  {
+    tag:"在／再", answer:"再",
+    explain:"「再」表示之後的動作，做完才再來",
+    variants: [
+      { before: [["做","完","功課"]], after: [["來","找","我","玩","。"]] },
+      { before: [["做","完","作業"]], after: [["來","找","我","玩","。"]] },
+      { before: [["吃","完","飯"]], after: [["來","找","我","玩","。"]] },
+      { before: [["洗","完","澡"]], after: [["來","找","我","玩","。"]] },
+      { before: [["考","完","試"]], after: [["一起","去","公園","玩","。"]] },
+    ]
+  },
+  // 這道題我要 __ 算一遍
+  {
+    tag:"在／再", answer:"再",
+    explain:"「再」表示重複動作，再算一次",
+    variants: [
+      { before: [["這","道","題","我","要"]], after: [["算","一","遍","。"]] },
+      { before: [["這","道","題","我","要"]], after: [["想","一","想","。"]] },
+      { before: [["這","本","書","我","要"]], after: [["讀","一","次","。"]] },
+      { before: [["這","首","歌","我","要"]], after: [["唱","一","遍","。"]] },
+      { before: [["這","個","動作","我","要"]], after: [["練","一","次","。"]] },
+    ]
+  },
+  // 太好玩了，我想 __ 玩一次
+  {
+    tag:"在／再", answer:"再",
+    explain:"「再」表示想重複，再玩一次",
+    variants: [
+      { before: [["太","好玩","了","，","我","想"]], after: [["玩","一","次","。"]] },
+      { before: [["太","好看","了","，","我","想"]], after: [["看","一","次","。"]] },
+      { before: [["太","好吃","了","，","我","想"]], after: [["吃","一","次","。"]] },
+      { before: [["太","好聽","了","，","我","想"]], after: [["聽","一","次","。"]] },
+    ]
+  },
+  // 你 __ 說一遍
+  {
+    tag:"在／再", answer:"再",
+    explain:"「再」表示重複，請你再說",
+    variants: [
+      { before: [["你"]], after: [["說","一","遍","。"]] },
+      { before: [["你"]], after: [["做","一","遍","。"]] },
+      { before: [["你"]], after: [["唱","一","次","。"]] },
+      { before: [["請","你"]], after: [["說","一","次","。"]] },
+      { before: [["請","你"]], after: [["念","一","遍","。"]] },
+    ]
+  },
+  // 先吃飯，__ 去玩
+  {
+    tag:"在／再", answer:"再",
+    explain:"「先…再…」表示順序，先做A再做B",
+    variants: [
+      { before: [["先","吃","飯","，"]], after: [["去","玩","。"]] },
+      { before: [["先","寫","功課","，"]], after: [["去","玩","。"]] },
+      { before: [["先","刷","牙","，"]], after: [["睡覺","。"]] },
+      { before: [["先","洗","手","，"]], after: [["吃","飯","。"]] },
+      { before: [["先","換","衣服","，"]], after: [["出門","。"]] },
+    ]
+  },
+  // [主詞] __ 也不出門
+  {
+    tag:"在／再", answer:"再",
+    explain:"「再也不」表示以後都不，固定說法",
+    variants: PEOPLE.map(p => ({
+      before: [[p]], after: [["也","不","出門","了","。"]]
+    }))
+  },
+];
 
-function showLoading() {
-  document.getElementById('qcard').innerHTML = `<div class="loading"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span style="margin-left:6px">AI 出題中，請稍候…</span></div>`;
-}
-
-async function fetchQuestions() {
-  const key = getKey();
-  if (!key) {
-    document.getElementById('qcard').innerHTML = `<div class="no-key">
-      網址中沒有找到 API Key。<br>
-      請用這個格式開啟：<br>
-      <code>https://你的帳號.github.io/chinese-quiz/?key=你的Key</code>
-    </div>`;
-    return;
-  }
-  showLoading();
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent?key=${key}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: PROMPT }] }],
-          generationConfig: { responseMimeType: 'application/json', temperature: 1.1 }
-        })
+// ─── 展開所有題目 ──────────────────────────────────────────
+let _tmplCounter = 0;
+function expandTemplates(templates) {
+  const all = [];
+  for (const tmpl of templates) {
+    const tmplId = _tmplCounter++;   // 每個模板有唯一 ID
+    if (tmpl.variants) {
+      for (const v of tmpl.variants) {
+        all.push({ tag: tmpl.tag, answer: tmpl.answer, explain: tmpl.explain, before: v.before, after: v.after, tmplId });
       }
-    );
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const clean = raw.replace(/```json|```/g, '').trim();
-    questions = JSON.parse(clean);
-    qi = 0; correct = 0; answered = false;
-    document.getElementById('cc').textContent = '0';
-    document.getElementById('tc').textContent = '0';
-    document.getElementById('pf').style.width = '0%';
-    renderQ();
-  } catch(e) {
-    document.getElementById('qcard').innerHTML = `
-      <div class="err-msg">出題失敗：${e.message}</div>
-      <button class="restart-btn" style="margin-top:1rem" onclick="fetchQuestions()">重試</button>`;
+    }
   }
+  return all;
 }
 
+const ALL_DE  = expandTemplates(DE_TEMPLATES);
+const ALL_DET = expandTemplates(DET_TEMPLATES);
+const ALL_ZAI = expandTemplates(ZAI_TEMPLATES);
+const ALL_ZAI2= expandTemplates(ZAI2_TEMPLATES);
+
+// ─── 解析 before/after 為注音字元陣列 ─────────────────────
+function parseSegment(words) {
+  // words 是字串陣列，每個字串可能多字
+  const result = [];
+  for (const w of words) {
+    if (["，","。","？","！","、"].includes(w)) {
+      result.push({ t: w, p: true });
+    } else {
+      // 逐字拆
+      const chars = [...w];
+      const zyStr = zy(w);
+      if (chars.length === 1) {
+        result.push({ t: w, r: zyStr });
+      } else {
+        // 多字詞，平均分注音
+        // 先嘗試整詞查
+        if (ZY[w]) {
+          // 把注音拆給各字
+          const zyChars = splitZhuyin(ZY[w]);
+          chars.forEach((c, i) => result.push({ t: c, r: zyChars[i] || '' }));
+        } else {
+          chars.forEach(c => result.push({ t: c, r: ZY[c] || '' }));
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function splitZhuyin(zyStr) {
+  // 把連續注音字串分割成每個字的注音（以聲調符號或ˊˇˋ˙作結尾判斷）
+  const tones = ['ˊ','ˇ','ˋ','˙'];
+  const result = [];
+  let cur = '';
+  for (const ch of zyStr) {
+    cur += ch;
+    if (tones.includes(ch) || isZhuyinEnd(ch)) {
+      result.push(cur);
+      cur = '';
+    }
+  }
+  if (cur) result.push(cur);
+  return result;
+}
+
+function isZhuyinEnd(ch) {
+  // 判斷是否為注音符號的最後一個（韻母）
+  const finals = ['ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ','ㄣ'];
+  return finals.includes(ch);
+}
+
+// ─── 隨機抽題（5的/得 + 5在/再，每個句型最多出現一次）──────
+function shuffle(arr) { return [...arr].sort(() => Math.random() - 0.5); }
+
+function pickUnique(pool, count) {
+  const shuffled = shuffle(pool);
+  const usedTmpl = new Set();
+  const result = [];
+  for (const q of shuffled) {
+    if (result.length >= count) break;
+    if (!usedTmpl.has(q.tmplId)) {
+      usedTmpl.add(q.tmplId);
+      result.push(q);
+    }
+  }
+  return result;
+}
+
+function pickQuestions() {
+  const dePicked  = pickUnique([...ALL_DE, ...ALL_DET], 5);
+  const zaiPicked = pickUnique([...ALL_ZAI, ...ALL_ZAI2], 5);
+  return shuffle([...dePicked, ...zaiPicked]);
+}
+
+// ─── 建構句子 HTML ─────────────────────────────────────────
 function buildSentence(q, filled) {
   let html = '';
-  q.before.forEach(item => {
+  const beforeParsed = q.before.flatMap(seg => parseSegment(seg));
+  const afterParsed  = q.after.flatMap(seg => parseSegment(seg));
+
+  beforeParsed.forEach(item => {
     if (item.p) html += `<span class="punct">${item.t}</span>`;
     else html += `<span class="char-unit"><span class="char-text">${item.t}</span><span class="char-zy">${item.r||''}</span></span>`;
   });
   html += `<span class="blank-unit"><span class="blank-char" id="bd">${filled || '\u00a0\u00a0'}</span></span>`;
-  q.after.forEach(item => {
+  afterParsed.forEach(item => {
     if (item.p) html += `<span class="punct">${item.t}</span>`;
     else html += `<span class="char-unit"><span class="char-text">${item.t}</span><span class="char-zy">${item.r||''}</span></span>`;
   });
   return html;
 }
 
+// ─── 遊戲邏輯 ─────────────────────────────────────────────
+let questions = [], qi = 0, correct = 0, answered = false;
+
+function getChoices(answer) {
+  if (answer === '在' || answer === '再') return ['在','再'];
+  return ['的','得'];
+}
+
 function renderQ() {
   const card = document.getElementById('qcard');
   if (qi >= questions.length) {
     const pct = Math.round(correct / questions.length * 100);
-    const msg = pct >= 90 ? '超棒！全部都答對了！' :
+    const msg = pct >= 90 ? '超棒！全部都答對了！🎉' :
                 pct >= 70 ? '很不錯！再練習幾次就完美了！' :
                 '繼續加油，多練習就會越來越好！';
     card.innerHTML = `<div class="end-screen">
       <div style="font-size:15px;color:#888">完成！共 ${questions.length} 題</div>
       <div class="end-score">${correct} / ${questions.length}</div>
       <div class="end-msg">${msg}</div>
-      <button class="restart-btn" onclick="fetchQuestions()">再來一組新題目！</button>
+      <button class="restart-btn" onclick="init()">再來一組！</button>
     </div>`;
     document.getElementById('pf').style.width = '100%';
     return;
@@ -185,6 +531,7 @@ function renderQ() {
   answered = false;
   document.getElementById('pf').style.width = (qi / questions.length * 100) + '%';
   document.getElementById('tc').textContent = qi;
+  const choices = getChoices(q.answer);
   card.innerHTML = `
     <div class="tag">${q.tag}</div>
     <div class="sentence">${buildSentence(q, null)}</div>
@@ -193,7 +540,7 @@ function renderQ() {
     <button class="next-btn" id="nb" style="display:none" onclick="nextQ()">下一題 →</button>
   `;
   const row = document.getElementById('crow');
-  q.choices.forEach(c => {
+  choices.forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'choice'; btn.textContent = c;
     btn.onclick = () => pick(c, q, btn);
@@ -221,7 +568,17 @@ function pick(choice, q, btn) {
 
 function nextQ() { qi++; renderQ(); }
 
-window.onload = fetchQuestions;
+function init() {
+  questions = pickQuestions();
+  qi = 0; correct = 0; answered = false;
+  document.getElementById('cc').textContent = '0';
+  document.getElementById('tc').textContent = '0';
+  document.getElementById('pf').style.width = '0%';
+  renderQ();
+}
+
+window.onload = init;
 </script>
+
 </body>
 </html>
